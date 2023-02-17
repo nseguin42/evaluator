@@ -10,13 +10,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      paths_result: ${{ steps.skip_check.outputs.paths_result }}
+    steps:
+      - id: skip_check
+      - uses: fkirc/skip-duplicate-actions@v5
+        with:
+          skip_after_successful_duplicate: 'true',
+          do_not_skip: '["push"]'
+          paths_ignore: '["README.md", "LICENSE", ".gitignore", ".github/**", ".rustfmt.toml"]'
+          paths_filter: |
+            build:
+              paths:
+                - Cargo.toml
+                - Cargo.lock
+                - src/**
+                - tests/**
   build:
+    needs: pre_job
+    if: needs.pre_job.outputs.should_skip != 'true' || !fromJSON(needs.pre_job.outputs.paths_result).build.should_skip
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Skip Duplicate Actions
-        uses: fkirc/skip-duplicate-actions@v5.3.0
-        paths_ignore: [ "README.md", "LICENSE", ".gitignore", ".github/**", ".rustfmt.toml" ]
       - uses: dtolnay/rust-toolchain@nightly
       - name: install cargo tools
         run: |
@@ -25,6 +43,10 @@ jobs:
           cargo install cargo-audit
       - name: cargo build --verbose
         run: cargo build --verbose
+  check:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: cargo check --verbose
         run: cargo check --verbose
       - name: cargo fmt --verbose -- --check
