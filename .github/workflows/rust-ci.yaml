@@ -51,7 +51,6 @@ jobs:
         run: cargo clippy --verbose -- -A dead-code
       - name: cargo audit
         run: cargo audit
-
       - name: cargo build --verbose
         run: cargo build --verbose
       - name: cargo doc --verbose
