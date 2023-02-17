@@ -35,29 +35,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
-      - name: install cargo tools
+      - name: install toolchain
+        run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - name: install tools
         run: |
           rustup component add clippy
           rustup component add rustfmt
           cargo install cargo-audit
-      - name: cargo build --verbose
-        run: cargo build --verbose
-  check:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
       - name: cargo check --verbose
         run: cargo check --verbose
       - name: cargo fmt --verbose -- --check
         run: cargo fmt --verbose -- --check
       - name: cargo clippy --verbose -- -A dead-code
         run: cargo clippy --verbose -- -A dead-code
-      - name: cargo build --verbose
-        run: cargo build --verbose
-      - name: cargo test -- --skip db
-        run: cargo test -- --skip db
-      - name: cargo doc --verbose
-        run: cargo doc --verbose
       - name: cargo audit
         run: cargo audit
+
+      - name: cargo build --verbose
+        run: cargo build --verbose
+      - name: cargo doc --verbose
+        run: cargo doc --verbose
+      - name: cargo test --verbose
+        run: cargo test --verbose
